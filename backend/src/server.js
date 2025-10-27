@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// Import routes - MAKE SURE ALL THESE ARE HERE
+// Import routes
 import authRoutes from './routes/auth.js';
 import trackRoutes from './routes/tracks.js';
 import playlistRoutes from './routes/playlists.js';
@@ -21,10 +21,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Database connection
+// Database connection - FIXED FOR RAILWAY
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Test database connection
@@ -36,7 +38,7 @@ pool.query('SELECT NOW()', (err, res) => {
   }
 });
 
-// Routes - MAKE SURE ALL THESE ARE HERE
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tracks', trackRoutes);
 app.use('/api/playlists', playlistRoutes);
@@ -48,6 +50,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
