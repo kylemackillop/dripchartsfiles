@@ -1,6 +1,6 @@
 // backend/src/routes/auth.js
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../server.js';
 
