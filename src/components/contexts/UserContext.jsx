@@ -55,7 +55,7 @@ export const UserProvider = ({ children }) => {
   const fetchUser = useCallback(async () => {
     try {
       setIsLoading(true);
-      const userData = await AuthUser.me();
+      const userData = await AuthUser.getCurrentUser();
       setUser(userData);
       setIsGuest(false);
       
@@ -63,12 +63,12 @@ export const UserProvider = ({ children }) => {
       await ensureUserDataExists(userData);
       
       setIsInitialized(true);
-      setIsLoading(false);
     } catch (error) {
-      // Don't log this as an error - guest access is normal
+      console.error('Error fetching user:', error);
       setUser(null);
       setIsGuest(true);
       setIsInitialized(true);
+    } finally {
       setIsLoading(false);
     }
   }, [ensureUserDataExists]);
@@ -76,7 +76,7 @@ export const UserProvider = ({ children }) => {
   const updateUser = useCallback(async (userData) => {
     try {
       await AuthUser.updateMyUserData(userData);
-      await fetchUser(); // Refresh user data after update
+      await fetchUser();
     } catch (error) {
       console.error('Error updating user:', error);
       throw error;
@@ -85,7 +85,7 @@ export const UserProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await AuthUser.logout();
+      AuthUser.logout();
       setUser(null);
       setIsGuest(true);
     } catch (error) {
@@ -93,12 +93,14 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  const login = useCallback(() => {
-    AuthUser.login();
-  }, []);
+  const login = useCallback(async () => {
+    // After login happens in LoginModal, this will refresh the user data
+    await fetchUser();
+  }, [fetchUser]);
 
-  const loginWithRedirect = useCallback((callbackUrl) => {
-    AuthUser.loginWithRedirect(callbackUrl);
+  const loginWithRedirect = useCallback(async (callbackUrl) => {
+    // Not implemented for Railway backend yet
+    console.warn('loginWithRedirect not implemented');
   }, []);
 
   useEffect(() => {

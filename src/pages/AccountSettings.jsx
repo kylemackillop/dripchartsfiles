@@ -57,7 +57,7 @@ export default function AccountSettingsPage() {
 
   const loadProfile = useCallback(async () => {
     try {
-      const authUser = await User.me();
+      const authUser = await User.getCurrentUser();
       setUser(authUser);
 
       // Fetch UserData record for the current user

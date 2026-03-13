@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from "react";
-import { Track, User, Playlist, UserData, PlaylistTrack } from "@/api/entities"; // Added UserData, PlaylistTrack
+import { useNavigate } from "react-router-dom";
+import { Track, User, Playlist, UserData, PlaylistTrack } from "@/api/entities";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; // Fixed syntax here
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal";
 import CreatePlaylistModal from "../components/playlist/CreatePlaylistModal";
-import PlaylistCard from "../components/playlist/PlaylistCard"; // Import PlaylistCard
+import PlaylistCard from "../components/playlist/PlaylistCard";
 import { useUser } from '@/components/contexts/UserContext';
-import { useGuestSession } from '@/components/contexts/GuestSessionContext'; // Added GuestSessionContext import
-import { useMusicPlayer } from '@/components/contexts/MusicPlayerContext'; // Added MusicPlayerContext import
-import GuestPrompt from "../components/ui/GuestPrompt"; // Added GuestPrompt import
-import { Input } from "@/components/ui/input"; // Added Input import
+import { useGuestSession } from '@/components/contexts/GuestSessionContext';
+import { useMusicPlayer } from '@/components/contexts/MusicPlayerContext';
+import GuestPrompt from "../components/ui/GuestPrompt";
+import { Input } from "@/components/ui/input";
 
 const GENRES = [
   { value: "all", label: "All Genres" },
@@ -73,10 +73,11 @@ const SongsTab = ({ user }) => {
   const [songs, setSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState("all");
-  const [sortBy, setSortBy] = useState("newest"); // Default to newest
+  const [sortBy, setSortBy] = useState("newest");
   const [userPlaylists, setUserPlaylists] = useState([]);
-  const { isAuthenticated } = useUser(); // Added isAuthenticated
-  const { triggerConversion } = useGuestSession(); // Added triggerConversion
+  const { isAuthenticated } = useUser();
+  const { triggerConversion } = useGuestSession();
+  const navigate = useNavigate();
 
   // State for AddToPlaylistModal
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -143,7 +144,6 @@ const SongsTab = ({ user }) => {
       <Card className="material-shadow hover:shadow-xl transition-shadow duration-300 overflow-hidden">
         <CardContent className="p-4 flex items-center gap-4 justify-between">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-                {/* Cover Art - visible on desktop and tablet, hidden on mobile landscape and smaller */}
                 <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 hidden sm:flex sm:items-center sm:justify-center">
                   {song.cover_art_url ? (
                     <img
@@ -187,14 +187,13 @@ const SongsTab = ({ user }) => {
                   </div>
                 </div>
             </div>
-             {/* Play button - always pinned to the right */}
              <div className="flex-shrink-0 ml-auto">
                 <Button
                     size="icon"
                     className="bg-[#D1C5E0] hover:bg-[#bcaecf] text-dark-purple shadow-lg rounded-full w-11 h-11"
                     onClick={(e) => {
                       e.preventDefault();
-                      playTrack(song); // Use global playTrack function
+                      playTrack(song);
                     }}
                 >
                     {currentTrack && currentTrack.id === song.id && isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
@@ -242,6 +241,17 @@ const SongsTab = ({ user }) => {
         </div>
       </Card>
 
+      {/* Upload Song Button */}
+      <div className="mb-6 flex justify-end">
+        <Button 
+          onClick={() => navigate(createPageUrl("Upload"))}
+          className="bg-primary hover:bg-primary/90 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Upload Song
+        </Button>
+      </div>
+
       <AnimatePresence>
         {isLoading ? (
           <div className="grid md:grid-cols-2 gap-6">
@@ -266,7 +276,7 @@ const SongsTab = ({ user }) => {
         )}
       </AnimatePresence>
 
-      {selectedSong && isAuthenticated && ( // Conditionally render if authenticated
+      {selectedSong && isAuthenticated && (
         <AddToPlaylistModal
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
@@ -280,7 +290,7 @@ const SongsTab = ({ user }) => {
   );
 };
 
-const ArtistsTab = ({ user }) => { // Accept user prop
+const ArtistsTab = ({ user }) => {
   const [artists, setArtists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState("all");
@@ -292,17 +302,15 @@ const ArtistsTab = ({ user }) => { // Accept user prop
     try {
       const [allTracks, discoverableUserData] = await Promise.all([
         Track.list('-created_date'),
-        UserData.filter({ can_be_discovered: true }) // Fetch discoverable artists from UserData
+        UserData.filter({ can_be_discovered: true })
       ]);
 
-      // Create artist data from UserData and Tracks
       const artistMap = {};
 
-      // Initialize map with all discoverable artists from UserData
       discoverableUserData.forEach(ud => {
         artistMap[ud.user_email] = {
-          ...ud, // Spread all fields from UserData (artist_name, bio, etc.)
-          email: ud.user_email, // ensure email is top-level
+          ...ud,
+          email: ud.user_email,
           tracks: [],
           totalRating: 0,
           totalVotes: 0,
@@ -310,7 +318,6 @@ const ArtistsTab = ({ user }) => { // Accept user prop
         };
       });
 
-      // Add track stats to the artists in the map
       allTracks.forEach(track => {
         if (artistMap[track.created_by]) {
           const artist = artistMap[track.created_by];
@@ -328,19 +335,16 @@ const ArtistsTab = ({ user }) => { // Accept user prop
         trackCount: artist.tracks.length,
         cumulativeRating: artist.totalVotes > 0 ? artist.totalRating / artist.totalVotes : 0,
         genres: Array.from(artist.genres),
-        displayName: artist.display_name || artist.artist_name || "Unknown Artist" // Use display_name first
+        displayName: artist.display_name || artist.artist_name || "Unknown Artist"
       }));
 
-      // Apply filtering before sorting
       artistList = artistList.filter(artist => {
         const genreMatch = selectedGenre === "all" || artist.genres.includes(selectedGenre);
-        // Filter by location (free text search)
         const locationMatch = locationFilter === "" ||
           (artist.location && artist.location.toLowerCase().includes(locationFilter.toLowerCase()));
         return genreMatch && locationMatch;
       });
 
-      // Apply sorting
       switch (sortBy) {
         case 'ranking':
           artistList.sort((a, b) => b.cumulativeRating - a.cumulativeRating);
@@ -352,10 +356,6 @@ const ArtistsTab = ({ user }) => { // Accept user prop
           artistList.sort((a, b) => b.displayName.localeCompare(a.displayName));
           break;
         case 'newest':
-           // This sorting assumes 'created_date' is available on the artist object, which is derived from UserData.
-           // If UserData does not have 'created_date', this sort will not be accurate for artist creation date.
-           // For now, it will sort by artists that happen to have a 'created_date' (like the first song they uploaded)
-           // If UserData itself had a creation timestamp, that would be better.
            artistList.sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
           break;
         default:
@@ -367,7 +367,7 @@ const ArtistsTab = ({ user }) => { // Accept user prop
       console.error("Error loading data:", error);
     }
     setIsLoading(false);
-  }, [selectedGenre, locationFilter, sortBy]); // Updated dependencies
+  }, [selectedGenre, locationFilter, sortBy]);
 
   useEffect(() => {
     loadData();
@@ -528,7 +528,9 @@ const ArtistsTab = ({ user }) => { // Accept user prop
 const PlaylistsTab = ({ user }) => {
   const [playlists, setPlaylists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { playTrack, currentTrack, isPlaying, playPlaylist } = useMusicPlayer();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { playPlaylist } = useMusicPlayer();
+  const { isAuthenticated } = useUser();
 
   useEffect(() => {
     const fetchPlaylists = async () => {
@@ -553,7 +555,6 @@ const PlaylistsTab = ({ user }) => {
         } else {
           setPlaylists([]);
         }
-
       } catch (error) {
         console.error("Error fetching playlists:", error);
       }
@@ -571,10 +572,9 @@ const PlaylistsTab = ({ user }) => {
     const trackIds = playlistTracks.map(pt => pt.track_id);
     const tracks = await Track.filter({ id: { "$in": trackIds } });
 
-    // Ensure tracks are in the correct order
     const orderedTracks = playlistTracks
       .map(pt => tracks.find(t => t.id === pt.track_id))
-      .filter(Boolean); // Filter out any null/undefined if track not found
+      .filter(Boolean);
     
     if (orderedTracks.length === 0) {
       alert("This playlist contains no valid songs!");
@@ -584,41 +584,67 @@ const PlaylistsTab = ({ user }) => {
     playPlaylist(orderedTracks);
   };
 
-
   return (
-    <AnimatePresence>
-      {isLoading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(6).fill(0).map((_, i) => (
-            <Card key={i} className="h-48 material-shadow animate-pulse bg-gray-100" />
-          ))}
-        </div>
-      ) : playlists.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {playlists.map((playlist) => (
-            <motion.div
-              key={playlist.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <PlaylistCard playlist={playlist} onPlay={() => handlePlayPlaylist(playlist)} />
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <Card className="shadow-md">
-          <CardContent className="p-16 text-center text-gray-500">
-            <Users className="w-16 h-16 mx-auto mb-4 text-primary" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Playlists Found</h3>
-            <p>There are no public playlists with enough songs yet. Check back soon!</p>
-          </CardContent>
-        </Card>
-      )}
-    </AnimatePresence>
+    <>
+      {/* New Playlist Button */}
+      <div className="mb-6 flex justify-end">
+        <Button 
+          onClick={() => {
+            if (!isAuthenticated) {
+              alert("Please log in to create a playlist");
+              return;
+            }
+            setIsCreateModalOpen(true);
+          }}
+          className="bg-primary hover:bg-primary/90 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Playlist
+        </Button>
+      </div>
+
+      <AnimatePresence>
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(6).fill(0).map((_, i) => (
+              <Card key={i} className="h-48 material-shadow animate-pulse bg-gray-100" />
+            ))}
+          </div>
+        ) : playlists.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {playlists.map((playlist) => (
+              <motion.div
+                key={playlist.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <PlaylistCard playlist={playlist} onPlay={() => handlePlayPlaylist(playlist)} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <Card className="shadow-md">
+            <CardContent className="p-16 text-center text-gray-500">
+              <Users className="w-16 h-16 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Playlists Found</h3>
+              <p>There are no public playlists with enough songs yet. Check back soon!</p>
+            </CardContent>
+          </Card>
+        )}
+      </AnimatePresence>
+
+      {/* Create Playlist Modal */}
+      <CreatePlaylistModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onPlaylistCreated={() => {
+          window.location.reload();
+        }}
+      />
+    </>
   );
 };
-
 
 const PlaceholderTab = ({ title }) => (
   <Card className="material-shadow">
@@ -636,7 +662,6 @@ export default function DiscoverPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <style>{`
-        /* Custom tab styling to match the design */
         .custom-tab {
           padding: 12px 24px;
           border-radius: 12px;
@@ -662,7 +687,6 @@ export default function DiscoverPage() {
           color: #374151 !important;
         }
         
-        /* Hide default shadcn tab styling */
         .custom-tabs-list {
           background: transparent !important;
           border: none !important;

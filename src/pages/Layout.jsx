@@ -6,8 +6,8 @@ import { UserData, User as AuthUser } from "@/api/entities";
 
 import { TrendingUp, Headphones, User, Zap, LogIn, Shield, UserCircle, Bell, DollarSign, BellRing, Info, Menu, X, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Footer from "./components/layout/Footer";
-import ScrollToTop from "./components/utils/ScrollToTop";
+import Footer from "@/components/layout/Footer";
+import ScrollToTop from "@/components/utils/ScrollToTop";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +28,7 @@ const navigationItems = [
   { name: "About", href: createPageUrl("About") },
   { name: "Charts", href: createPageUrl("Charts") },
   { name: "Discover", href: createPageUrl("Discover") },
-  { name: "Pricing", href: createPageUrl("Pricing") },
+  // { name: "Pricing", href: createPageUrl("Pricing") }, // Feature flag: disabled for now
 ];
 
 function LayoutContent({ children, currentPageName }) {
@@ -200,10 +200,12 @@ function LayoutContent({ children, currentPageName }) {
                              <Shield className="mr-2 h-4 w-4" />
                              <span>Security</span>
                            </DropdownMenuItem>
+                           {/* Feature flag: Billing disabled for now
                            <DropdownMenuItem onClick={() => navigate(createPageUrl("BillingInfo"))}>
                             <DollarSign className="mr-2 h-4 w-4"/>
                             <span>Billing</span>
                            </DropdownMenuItem>
+                           */}
                            <DropdownMenuSeparator />
                            <DropdownMenuItem onClick={handleLogout}>
                              <LogIn className="mr-2 h-4 w-4" />
